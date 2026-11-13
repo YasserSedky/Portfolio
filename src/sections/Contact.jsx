@@ -1,4 +1,5 @@
 // src/sections/Contact.jsx
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   Mail,
@@ -6,27 +7,35 @@ import {
   MessageCircle,
   ArrowUpRight,
   Send,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../components/icons/SocialIcons';
 import FadeIn from '../components/animations/FadeIn';
 import Button from '../components/ui/Button';
+import {
+  CONTACT_INFO,
+  getPreferredEmailUrl,
+  getMailtoUrl,
+} from '../utils/contact';
 
 const contactLinks = [
   {
     id: 'email',
     icon: Mail,
     label: 'Email',
-    value: 'yassersedky07@gmail.com',
-    href: 'mailto:yassersedky07@gmail.com',
+    value: CONTACT_INFO.email,
+    getHref: () => getPreferredEmailUrl(),
     color: '#6C63FF',
     description: 'Best for project inquiries',
+    isEmail: true,
   },
   {
     id: 'phone',
     icon: Phone,
     label: 'Phone',
-    value: '+20 100 763 5462',
-    href: 'tel:+201007635462',
+    value: CONTACT_INFO.phone,
+    getHref: () => `tel:${CONTACT_INFO.phone.replace(/\s+/g, '')}`,
     color: '#38BDF8',
     description: 'Available during business hours',
   },
@@ -34,8 +43,8 @@ const contactLinks = [
     id: 'whatsapp',
     icon: MessageCircle,
     label: 'WhatsApp',
-    value: '+20 100 763 5462',
-    href: 'https://wa.me/201007635462',
+    value: CONTACT_INFO.phone,
+    getHref: () => CONTACT_INFO.whatsappUrl,
     color: '#25D366',
     description: 'Quick responses, any time',
     external: true,
@@ -47,31 +56,43 @@ const socialLinks = [
     id: 'linkedin',
     icon: LinkedinIcon,
     label: 'LinkedIn',
-    href: 'https://www.linkedin.com/in/yasser-wael-sedky-a521a3326/',
+    href: CONTACT_INFO.linkedinUrl,
     color: '#0A66C2',
   },
   {
     id: 'github',
     icon: GithubIcon,
     label: 'GitHub',
-    href: 'https://github.com/YasserSedky',
+    href: CONTACT_INFO.githubUrl,
     color: '#F8FAFC',
   },
 ];
 
 function ContactRow({ link, index }) {
   const Icon = link.icon;
+  const [copied, setCopied] = useState(false);
+  const href = link.getHref ? link.getHref() : link.href;
+  const isExternal = link.external || (href && href.startsWith('http'));
+
+  const handleCopy = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(link.value);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <motion.a
-      href={link.href}
-      target={link.external ? '_blank' : undefined}
+      href={href}
+      target={isExternal ? '_blank' : undefined}
       rel="noopener noreferrer"
       initial={{ opacity: 0, x: -20 }}
       whileInView={{ opacity: 1, x: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5, delay: index * 0.08 }}
       whileHover={{ x: 4 }}
-      className="group flex items-center gap-5 p-5 lg:p-6 rounded-xl border border-border hover:border-border-hover bg-bg-card hover:bg-bg-hover transition-all duration-200"
+      className="group flex items-center gap-4 lg:gap-5 p-5 lg:p-6 rounded-xl border border-border hover:border-border-hover bg-bg-card hover:bg-bg-hover transition-all duration-200"
     >
       <div
         className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 border transition-all duration-200 group-hover:scale-110"
@@ -82,11 +103,33 @@ function ContactRow({ link, index }) {
       >
         <Icon size={20} style={{ color: link.color }} />
       </div>
-      <div className="flex flex-col gap-0.5 min-w-0">
+      <div className="flex flex-col gap-0.5 min-w-0 flex-1">
         <p className="text-text-muted text-xs font-mono uppercase tracking-widest">{link.label}</p>
         <p className="text-text-primary font-medium text-sm truncate">{link.value}</p>
         <p className="text-text-muted text-xs">{link.description}</p>
       </div>
+
+      {link.isEmail && (
+        <button
+          type="button"
+          onClick={handleCopy}
+          title={copied ? 'Copied!' : 'Copy email address'}
+          className="flex-shrink-0 p-2 rounded-lg text-text-muted hover:text-text-primary hover:bg-white/10 transition-colors border border-border/50 hover:border-border flex items-center gap-1.5 text-xs font-mono"
+        >
+          {copied ? (
+            <>
+              <Check size={14} className="text-emerald-400" />
+              <span className="text-emerald-400 hidden sm:inline">Copied</span>
+            </>
+          ) : (
+            <>
+              <Copy size={14} />
+              <span className="hidden sm:inline">Copy</span>
+            </>
+          )}
+        </button>
+      )}
+
       <ArrowUpRight
         size={16}
         className="flex-shrink-0 ml-auto text-text-muted opacity-0 group-hover:opacity-100 transition-opacity duration-200"
@@ -96,6 +139,10 @@ function ContactRow({ link, index }) {
 }
 
 export default function Contact() {
+  const preferredEmailUrl = getPreferredEmailUrl();
+  const isEmailExternal = preferredEmailUrl.startsWith('http');
+  const mailtoUrl = getMailtoUrl();
+
   return (
     <section id="contact" className="section-padding relative overflow-hidden">
       {/* Background */}
@@ -128,15 +175,26 @@ export default function Contact() {
 
             {/* Primary email CTA */}
             <FadeIn delay={0.3}>
-              <div className="mt-4">
+              <div className="mt-4 flex flex-wrap items-center gap-3">
                 <Button
                   variant="primary"
                   size="lg"
-                  href="mailto:yassersedky07@gmail.com"
+                  href={preferredEmailUrl}
+                  target={isEmailExternal ? '_blank' : undefined}
+                  rel="noopener noreferrer"
                   className="w-full sm:w-auto"
                   iconRight={<Send size={16} />}
                 >
                   Send Email
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="lg"
+                  href={mailtoUrl}
+                  className="w-full sm:w-auto"
+                  icon={<Mail size={16} />}
+                >
+                  Open in Mail App
                 </Button>
               </div>
             </FadeIn>

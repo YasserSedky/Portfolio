@@ -2,6 +2,7 @@
 import { motion } from 'framer-motion';
 import { Mail, MessageCircle, ArrowUpRight } from 'lucide-react';
 import { GithubIcon, LinkedinIcon } from '../icons/SocialIcons';
+import { CONTACT_INFO, getPreferredEmailUrl } from '../../utils/contact';
 
 const navLinks = [
   { id: 'home', label: 'Home' },
@@ -11,14 +12,17 @@ const navLinks = [
   { id: 'contact', label: 'Contact' },
 ];
 
-const socials = [
-  { href: 'https://github.com/YasserSedky', icon: GithubIcon, label: 'GitHub' },
-  { href: 'https://www.linkedin.com/in/yasser-wael-sedky-a521a3326/', icon: LinkedinIcon, label: 'LinkedIn' },
-  { href: 'mailto:yassersedky07@gmail.com', icon: Mail, label: 'Email' },
-  { href: 'https://wa.me/201007635462', icon: MessageCircle, label: 'WhatsApp' },
-];
-
 export default function Footer() {
+  const preferredEmailUrl = getPreferredEmailUrl();
+  const isEmailExternal = preferredEmailUrl.startsWith('http');
+
+  const socials = [
+    { href: CONTACT_INFO.githubUrl, icon: GithubIcon, label: 'GitHub' },
+    { href: CONTACT_INFO.linkedinUrl, icon: LinkedinIcon, label: 'LinkedIn' },
+    { href: preferredEmailUrl, icon: Mail, label: 'Email', external: isEmailExternal },
+    { href: CONTACT_INFO.whatsappUrl, icon: MessageCircle, label: 'WhatsApp', external: true },
+  ];
+
   const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -79,15 +83,17 @@ export default function Footer() {
             <h4 className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-5">Get In Touch</h4>
             <div className="flex flex-col gap-3">
               <a
-                href="mailto:yassersedky07@gmail.com"
+                href={preferredEmailUrl}
+                target={isEmailExternal ? '_blank' : undefined}
+                rel="noopener noreferrer"
                 className="flex items-center gap-2 text-text-muted hover:text-text-primary text-sm transition-colors duration-200 group"
               >
                 <Mail size={14} className="text-accent" />
-                yassersedky07@gmail.com
+                {CONTACT_INFO.email}
                 <ArrowUpRight size={12} className="opacity-0 group-hover:opacity-100 transition-opacity" />
               </a>
               <a
-                href="https://wa.me/201007635462"
+                href={CONTACT_INFO.whatsappUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-text-muted hover:text-text-primary text-sm transition-colors duration-200 group"
